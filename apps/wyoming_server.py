@@ -23,7 +23,7 @@ class VieNeuEventHandler(AsyncEventHandler):
 
     async def handle_event(self, event: Event) -> bool:
         if Info.is_type(event.type):
-            self.send_info()
+            await self.send_info()
             return True
 
         if Synthesize.is_type(event.type):
@@ -71,7 +71,7 @@ class VieNeuEventHandler(AsyncEventHandler):
 
         return True
 
-    def send_info(self) -> None:
+    async def send_info(self) -> None:
         """Send info about the TTS program."""
         voices = self.vieneu.list_preset_voices()
         tts_voices = []
@@ -94,7 +94,7 @@ class VieNeuEventHandler(AsyncEventHandler):
             voices=tts_voices,
         )
 
-        self.write_event(Info(tts=[program]).event())
+        await self.write_event(Info(tts=[program]).event())
 
 async def main() -> None:
     parser = argparse.ArgumentParser()
