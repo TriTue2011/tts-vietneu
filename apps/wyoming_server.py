@@ -5,7 +5,7 @@ import numpy as np
 
 from wyoming.audio import AudioChunk, AudioStart, AudioStop
 from wyoming.event import Event
-from wyoming.info import Attribution, Info, TtsProgram, TtsVoice
+from wyoming.info import Attribution, Describe, Info, TtsProgram, TtsVoice
 from wyoming.server import AsyncEventHandler, AsyncServer
 from wyoming.tts import Synthesize
 
@@ -22,7 +22,7 @@ class VieNeuEventHandler(AsyncEventHandler):
         self.vieneu = vieneu_instance
 
     async def handle_event(self, event: Event) -> bool:
-        if Info.is_type(event.type):
+        if Describe.is_type(event.type):
             await self.send_info()
             return True
 
