@@ -16,25 +16,10 @@ _LOGGER = logging.getLogger(__name__)
 class VieNeuEventHandler(AsyncEventHandler):
     """Event handler for Wyoming protocol."""
 
-    def __init__(self, cli_args, *args, **kwargs) -> None:
+    def __init__(self, cli_args, vieneu_instance, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.cli_args = cli_args
-        # Initialize Vieneu instance only once using class level or instance
-        if not hasattr(self.__class__, "vieneu"):
-            backend = "onnx"
-            if cli_args.gpu:
-                backend = "pytorch"
-            else:
-                try:
-                    import torch
-                    if torch.cuda.is_available():
-                        backend = "pytorch"
-                except ImportError:
-                    pass
-
-            _LOGGER.info(f"Initializing Vieneu TTS with backend: {backend}")
-            self.__class__.vieneu = Vieneu(backend=backend)
-        self.vieneu = self.__class__.vieneu
+        self.vieneu = vieneu_instance
 
     async def handle_event(self, event: Event) -> bool:
         if Info.is_type(event.type):
@@ -120,11 +105,26 @@ async def main() -> None:
 
     logging.basicConfig(level=logging.DEBUG if args.debug else logging.INFO)
 
+    backend = "onnx"
+    if args.gpu:
+        backend = "pytorch"
+    else:
+        try:
+            import torch
+            if torch.cuda.is_available():
+                backend = "pytorch"
+        except ImportError:
+            pass
+
+    _LOGGER.info(f"Initializing Vieneu TTS with backend: {backend}")
+    vieneu_instance = Vieneu(backend=backend)
+    _LOGGER.info("TTS Model loaded successfully. Starting server...")
+
     server = AsyncServer.from_uri(args.uri)
     _LOGGER.info(f"Ready. Listening on {args.uri}")
 
     try:
-        await server.run(lambda *conn_args, **conn_kwargs: VieNeuEventHandler(args, *conn_args, **conn_kwargs))
+        await server.run(lambda *conn_args, **conn_kwargs: VieNeuEventHandler(args, vieneu_instance, *conn_args, **conn_kwargs))
     except KeyboardInterrupt:
         pass
 
