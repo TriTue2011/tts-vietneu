@@ -1,4 +1,5 @@
-FROM nvidia/cuda:12.8.0-runtime-ubuntu24.04
+ARG BASE_IMAGE=nvidia/cuda:12.8.0-runtime-ubuntu24.04
+FROM ${BASE_IMAGE}
 
 ENV DEBIAN_FRONTEND=noninteractive \
     PYTHONUNBUFFERED=1 \
@@ -26,17 +27,16 @@ WORKDIR /workspace
 
 # Copy only requirements first
 COPY pyproject.toml uv.lock ./
-# Sync environment (minimal, torch-free by default for ONNX CPU)
-# If you want GPU support, uncomment the next line and comment the CPU line
-# RUN uv sync --no-dev --group gpu --no-install-project
-# Install with gpu and wyoming extra
-RUN uv sync --no-dev --group gpu --extra wyoming --no-install-project
+
+# Install with optional gpu and wyoming extra
+ARG UV_ARGS="--group gpu"
+RUN uv sync --no-dev ${UV_ARGS} --extra wyoming --no-install-project
 
 # Copy the rest of the project
 COPY . .
 
 # Install the project itself
-RUN uv sync --no-dev --group gpu --extra wyoming
+RUN uv sync --no-dev ${UV_ARGS} --extra wyoming
 
 # Expose the default Wyoming port
 EXPOSE 10200

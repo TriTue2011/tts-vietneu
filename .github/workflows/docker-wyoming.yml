@@ -1,0 +1,92 @@
+name: Build and Publish Docker Images
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository_owner }}/tts-vietneu-wyoming
+
+jobs:
+  build-and-push-gpu:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata (tags, labels) for Docker (GPU)
+        id: meta-gpu
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=latest
+            type=raw,value=gpu-latest
+            type=ref,event=tag
+            type=ref,event=tag,suffix=-gpu
+
+      - name: Build and push Docker image (GPU)
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: Dockerfile.wyoming
+          push: true
+          tags: ${{ steps.meta-gpu.outputs.tags }}
+          labels: ${{ steps.meta-gpu.outputs.labels }}
+          build-args: |
+            BASE_IMAGE=nvidia/cuda:12.8.0-runtime-ubuntu24.04
+            UV_ARGS=--group gpu
+
+  build-and-push-cpu:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata (tags, labels) for Docker (CPU)
+        id: meta-cpu
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=cpu-latest
+            type=ref,event=tag,suffix=-cpu
+
+      - name: Build and push Docker image (CPU)
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: Dockerfile.wyoming
+          push: true
+          tags: ${{ steps.meta-cpu.outputs.tags }}
+          labels: ${{ steps.meta-cpu.outputs.labels }}
+          build-args: |
+            BASE_IMAGE=ubuntu:24.04
+            UV_ARGS=
