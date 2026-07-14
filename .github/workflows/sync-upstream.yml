@@ -1,0 +1,41 @@
+name: Sync with Upstream
+
+on:
+  schedule:
+    # Chạy vào 00:00 mỗi ngày
+    - cron: '0 0 * * *'
+  workflow_dispatch: # Cho phép bấm chạy thủ công trên giao diện
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Quyền ghi để push code
+      
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Git credentials
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Add upstream remote
+        run: git remote add upstream https://github.com/pnnbao97/VieNeu-TTS.git
+
+      - name: Fetch upstream
+        run: git fetch upstream
+
+      - name: Sync and Merge
+        run: |
+          # Chắc chắn đang ở nhánh main
+          git checkout main
+          # Merge code từ nhánh main của tác giả gốc (pnnbao97)
+          # Sử dụng chiến lược -X ours cho mọi xung đột (giữ lại file của mình nếu có)
+          git merge upstream/main -m "chore: Auto-sync from upstream pnnbao97/VieNeu-TTS" --allow-unrelated-histories -X ours || echo "No changes to merge or conflict occurred."
+          
+      - name: Push to origin
+        run: git push origin main

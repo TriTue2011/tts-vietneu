@@ -108,10 +108,6 @@ pdf = [
     "PyMuPDF>=1.25.0",
 ]
 
-wyoming = [
-    "wyoming>=1.5.0",
-]
-
 [dependency-groups]
 dev = [
     "pytest",

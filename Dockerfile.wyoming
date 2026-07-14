@@ -28,15 +28,18 @@ WORKDIR /workspace
 # Copy only requirements first
 COPY pyproject.toml uv.lock ./
 
-# Install with optional gpu and wyoming extra
+# Install with optional gpu and without wyoming extra
 ARG UV_ARGS="--group gpu"
-RUN uv sync --no-dev ${UV_ARGS} --extra wyoming --no-install-project
+RUN uv sync --no-dev ${UV_ARGS} --no-install-project
 
 # Copy the rest of the project
 COPY . .
 
 # Install the project itself
-RUN uv sync --no-dev ${UV_ARGS} --extra wyoming
+RUN uv sync --no-dev ${UV_ARGS}
+
+# Install wyoming package manually to avoid modifying pyproject.toml
+RUN uv pip install wyoming
 
 # Expose the default Wyoming port
 EXPOSE 10200
