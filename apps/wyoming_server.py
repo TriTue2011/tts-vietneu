@@ -82,6 +82,7 @@ class VieNeuEventHandler(AsyncEventHandler):
                     description=label,
                     attribution=Attribution(name="VieNeu", url="https://github.com/pnnbao97/VieNeu-TTS"),
                     installed=True,
+                    version="3.0",
                     languages=["vi", "en"],
                 )
             )
@@ -91,6 +92,7 @@ class VieNeuEventHandler(AsyncEventHandler):
             description="VieNeu TTS Server",
             attribution=Attribution(name="VieNeu", url="https://github.com/pnnbao97/VieNeu-TTS"),
             installed=True,
+            version="3.0",
             voices=tts_voices,
         )
 
