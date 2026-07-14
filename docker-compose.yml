@@ -2,15 +2,8 @@ version: '3.8'
 
 services:
   vieneu-wyoming:
-    # Để sử dụng image đã build sẵn trên Github Container Registry:
-    # Chọn tag 'gpu-latest' nếu máy bạn có GPU NVIDIA (hoặc 'cpu-latest' cho bản nhẹ chạy CPU)
+    # 1. BẮT BUỘC dùng image bản GPU
     image: ghcr.io/tritue2011/tts-vietneu-wyoming:gpu-latest
-    
-    # Nếu muốn tự build image trên máy thay vì kéo về, hãy bỏ comment phần build:
-    # build:
-    #   context: .
-    #   dockerfile: Dockerfile.wyoming
-    
     container_name: vieneu-wyoming
     ports:
       - "10200:10200"
@@ -18,15 +11,15 @@ services:
       - vieneu_cache:/root/.cache/huggingface
     restart: unless-stopped
     
-    # Bỏ comment cụm dưới đây để dùng GPU (Card NVIDIA)
-    # deploy:
-    #   resources:
-    #     reservations:
-    #       devices:
-    #         - driver: nvidia
-    #           count: 1
-    #           capabilities: [gpu]
-    
+    # 2. XÓA DẤU THĂNG (#) ĐỂ KÍCH HOẠT GPU NVIDIA
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+              
     command: ["--uri", "tcp://0.0.0.0:10200"]
 
 volumes:
