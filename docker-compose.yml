@@ -8,7 +8,7 @@ services:
     ports:
       - "10200:10200"
     volumes:
-      - vieneu_cache:/root/.cache/huggingface
+      - /opt/vietneu-tts:/root/.cache/huggingface
     restart: unless-stopped
     
     # 2. XÓA DẤU THĂNG (#) ĐỂ KÍCH HOẠT GPU NVIDIA
@@ -21,6 +21,3 @@ services:
               capabilities: [gpu]
               
     command: ["--uri", "tcp://0.0.0.0:10200"]
-
-volumes:
-  vieneu_cache:
