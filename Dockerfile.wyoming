@@ -1,0 +1,46 @@
+FROM nvidia/cuda:12.8.0-runtime-ubuntu24.04
+
+ENV DEBIAN_FRONTEND=noninteractive \
+    PYTHONUNBUFFERED=1 \
+    HF_HOME=/root/.cache/huggingface \
+    PATH="/workspace/.venv/bin:$PATH"
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    software-properties-common \
+    && add-apt-repository ppa:deadsnakes/ppa \
+    && apt-get update && apt-get install -y --no-install-recommends \
+    python3.12 \
+    python3.12-dev \
+    build-essential \
+    git \
+    curl \
+    wget \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install uv directly
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+
+WORKDIR /workspace
+
+# Copy only requirements first
+COPY pyproject.toml uv.lock ./
+# Sync environment (minimal, torch-free by default for ONNX CPU)
+# If you want GPU support, uncomment the next line and comment the CPU line
+# RUN uv sync --no-dev --group gpu --no-install-project
+# Install with gpu and wyoming extra
+RUN uv sync --no-dev --group gpu --extra wyoming --no-install-project
+
+# Copy the rest of the project
+COPY . .
+
+# Install the project itself
+RUN uv sync --no-dev --group gpu --extra wyoming
+
+# Expose the default Wyoming port
+EXPOSE 10200
+
+# Run the Wyoming server
+ENTRYPOINT ["uv", "run", "python", "apps/wyoming_server.py"]
+CMD ["--uri", "tcp://0.0.0.0:10200"]
