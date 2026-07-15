@@ -108,6 +108,12 @@ pdf = [
     "PyMuPDF>=1.25.0",
 ]
 
+# Wyoming protocol server (apps/wyoming_server.py), for Home Assistant. Separate
+# from core to keep the minimal install torch-free. Install with: pip install vieneu[wyoming]
+wyoming = [
+    "wyoming>=1.5.0",
+]
+
 [dependency-groups]
 dev = [
     "pytest",
