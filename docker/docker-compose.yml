@@ -50,6 +50,30 @@ services:
     restart: unless-stopped
 
   # ========================================================
+  # Wyoming Profile (Home Assistant TTS server, CPU/ONNX)
+  # ========================================================
+  wyoming:
+    profiles: ["wyoming"]
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.wyoming
+    container_name: vieneu-tts-wyoming
+    environment:
+      - HF_HOME=${HF_HOME:-/root/.cache/huggingface}
+      - PYTHONUNBUFFERED=1
+      # See docker/Dockerfile.wyoming for why these matter: without them NumPy's
+      # OpenBLAS thread pool oversubscribes on top of ORT's own intra-op pool.
+      - OMP_NUM_THREADS=1
+      - OPENBLAS_NUM_THREADS=1
+      - MKL_NUM_THREADS=1
+      - NUMEXPR_NUM_THREADS=1
+    volumes:
+      - huggingface_cache:/root/.cache/huggingface
+    ports:
+      - "${WYOMING_PORT:-10500}:10500"
+    restart: unless-stopped
+
+  # ========================================================
   # GPU Profile (Gradio App)
   # ========================================================
   gpu:

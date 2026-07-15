@@ -1,0 +1,43 @@
+FROM python:3.12-slim-bookworm
+
+ENV DEBIAN_FRONTEND=noninteractive \
+    PYTHONUNBUFFERED=1 \
+    HF_HOME=/root/.cache/huggingface \
+    PHONEMIZER_ESPEAK_LIBRARY=/usr/lib/x86_64-linux-gnu/libespeak-ng.so.1 \
+    UV_PROJECT_ENVIRONMENT="/opt/venv" \
+    PATH="/opt/venv/bin:$PATH" \
+    # NumPy's bundled OpenBLAS auto-detects every visible CPU and busy-spins by
+    # default. That thread pool is invisible to (and stacks on top of) the ONNX
+    # Runtime intra-op pool this engine already tunes for itself (see
+    # onnx_runtime_lite.py::_default_intra_op_threads) — the two fight for the
+    # same cores, and the resulting oversubscription drags clock speed down far
+    # below what the CPU can sustain (measured: RTF 1.5 -> 0.38 on an 8c/16t
+    # Ryzen just from pinning these to 1). Keep ORT's own thread count as the
+    # only knob that matters.
+    OMP_NUM_THREADS=1 \
+    OPENBLAS_NUM_THREADS=1 \
+    MKL_NUM_THREADS=1 \
+    NUMEXPR_NUM_THREADS=1
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    espeak-ng \
+    libespeak-ng1 \
+    git \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+
+WORKDIR /workspace
+
+# Torch-free CPU/ONNX core + the `wyoming` extra, no dev/gpu groups.
+COPY pyproject.toml uv.lock ./
+RUN uv sync --no-dev --extra wyoming --no-install-project
+
+COPY . .
+RUN uv sync --no-dev --extra wyoming
+
+EXPOSE 10500
+
+ENTRYPOINT ["uv", "run", "python", "-m", "apps.wyoming_server"]
+CMD ["--uri", "tcp://0.0.0.0:10500"]
