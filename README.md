@@ -187,7 +187,7 @@ for chunk in vieneu.infer_stream("Xin chào các bạn!", voice="Minh Đức"):
     play(chunk)                                   # np.float32 @ 48 kHz — play/write as it arrives
 ```
 
-A complete **FastAPI web streaming demo** (browser player, live time-to-first-audio, dark mode) is in [`apps/web_stream.py`](apps/web_stream.py):
+A complete **FastAPI web streaming demo** is in [`apps/web_stream.py`](apps/web_stream.py):
 
 ```bash
 uv run python -m apps.web_stream                  # → http://127.0.0.1:8001
